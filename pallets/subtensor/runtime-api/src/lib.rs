@@ -1,6 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use alloc::vec::Vec;
+use frame_support::pallet_prelude::Decode;
+use pallet_subtensor::EpochResponse;
 
 // Here we declare the runtime API. It is implemented it the `impl` block in
 // src/neuron_info.rs, src/subnet_info.rs, and src/delegate_info.rs
@@ -31,5 +33,9 @@ sp_api::decl_runtime_apis! {
 
     pub trait SubnetRegistrationRuntimeApi {
         fn get_network_registration_cost() -> u64;
+    }
+
+    pub trait SubtensorRuntimeApi<AccountId: Decode> {
+         fn get_epoch_info(netuid: u16, is_incentive: Option<bool>) -> EpochResponse<AccountId>;
     }
 }

@@ -341,17 +341,20 @@ impl<T: Config> Pallet<T> {
     ///  * 'netuid': ( u16 ):
     ///     - The network to distribute the emission onto.
     ///
-    ///  * 'rao_emission': ( u64 ):
-    ///     - The total emission for the epoch.
+    ///  * 'incentive': Option<bool>:
+    ///     - If Some(true), return the incentive data as Vec<I32F32>, otherwise behave normally.
     ///
     ///  * 'debug' ( bool ):
     ///     - Print debugging outputs.
     ///
     #[allow(clippy::indexing_slicing)]
-    pub fn epoch(netuid: u16, rao_emission: u64) -> Vec<(T::AccountId, u64, u64)> {
+    pub fn epoch(netuid: u16, is_incentive: Option<bool>) -> EpochResponse<T::AccountId> {
         // Get subnetwork size.
         let n: u16 = Self::get_subnetwork_n(netuid);
         log::trace!("Number of Neurons in Network: {:?}", n);
+
+        // Retrieve the 'rao_emission' value within the function.
+        let rao_emission: u64 = Self::get_emission_value(netuid);
 
         // ======================
         // == Active & updated ==
@@ -690,17 +693,22 @@ impl<T: Config> Pallet<T> {
                 }
             });
 
-        // Emission tuples ( hotkeys, server_emission, validator_emission )
-        hotkeys
-            .into_iter()
-            .map(|(uid_i, hotkey)| {
-                (
-                    hotkey,
-                    server_emission[uid_i as usize],
-                    validator_emission[uid_i as usize],
-                )
-            })
-            .collect()
+        if is_incentive.unwrap_or(false) {
+            EpochResponse::<T::AccountId>::IncentiveData(incentive)
+        } else {
+            EpochResponse::<T::AccountId>::Emissions(
+                hotkeys
+                    .into_iter()
+                    .map(|(uid_i, hotkey)| {
+                        (
+                            hotkey,
+                            server_emission[uid_i as usize],
+                            validator_emission[uid_i as usize],
+                        )
+                    })
+                    .collect(),
+            )
+        }
     }
 
     pub fn get_float_rho(netuid: u16) -> I32F32 {

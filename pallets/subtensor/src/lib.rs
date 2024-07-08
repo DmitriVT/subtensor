@@ -19,6 +19,7 @@ use codec::{Decode, Encode};
 use frame_support::sp_runtime::transaction_validity::InvalidTransaction;
 use frame_support::sp_runtime::transaction_validity::ValidTransaction;
 use scale_info::TypeInfo;
+use serde::{Deserialize, Serialize};
 use sp_runtime::{
     traits::{DispatchInfoOf, Dispatchable, PostDispatchInfoOf, SignedExtension},
     transaction_validity::{TransactionValidity, TransactionValidityError},
@@ -2235,6 +2236,15 @@ pub enum CallType {
     Other,
 }
 
+/************************************************************
+    Epoch Info types definition
+************************************************************/
+#[derive(Debug, PartialEq, Encode, Decode, TypeInfo, Clone, Serialize, Deserialize)]
+pub enum EpochResponse<AccountId> {
+    Emissions(Vec<(AccountId, u64, u64)>),
+    IncentiveData(Vec<I32F32>),
+}
+
 #[derive(Encode, Decode, Clone, Eq, PartialEq, TypeInfo)]
 pub struct SubtensorSignedExtension<T: Config + Send + Sync + TypeInfo>(pub PhantomData<T>);
 
@@ -2468,6 +2478,7 @@ use sp_std::vec;
 // used not 25 lines below
 #[allow(unused)]
 use sp_std::vec::Vec;
+use substrate_fixed::types::I32F32;
 
 /// Trait for managing a membership pallet instance in the runtime
 pub trait MemberManagement<AccountId> {
