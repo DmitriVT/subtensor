@@ -24,6 +24,7 @@ use pallet_grandpa::{
     fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
 use pallet_registry::CanRegisterIdentity;
+use pallet_subtensor::EpochResponse;
 use scale_info::TypeInfo;
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
@@ -1675,6 +1676,12 @@ impl_runtime_apis! {
     impl subtensor_custom_rpc_runtime_api::SubnetRegistrationRuntimeApi<Block> for Runtime {
         fn get_network_registration_cost() -> u64 {
             SubtensorModule::get_network_lock_cost()
+        }
+    }
+
+    impl subtensor_custom_rpc_runtime_api::SubtensorRuntimeApi<Block, AccountId> for Runtime {
+        fn get_epoch_info(netuid: u16, is_incentive: Option<bool>) -> EpochResponse<AccountId> {
+            SubtensorModule::epoch(netuid, is_incentive)
         }
     }
 }

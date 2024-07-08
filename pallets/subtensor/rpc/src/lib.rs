@@ -9,11 +9,12 @@ use sp_blockchain::HeaderBackend;
 use sp_runtime::traits::Block as BlockT;
 use std::sync::Arc;
 
+use pallet_subtensor::EpochResponse;
 use sp_api::ProvideRuntimeApi;
-
+use sp_runtime::AccountId32;
 pub use subtensor_custom_rpc_runtime_api::{
     DelegateInfoRuntimeApi, NeuronInfoRuntimeApi, SubnetInfoRuntimeApi,
-    SubnetRegistrationRuntimeApi,
+    SubnetRegistrationRuntimeApi, SubtensorRuntimeApi,
 };
 
 #[rpc(client, server)]
@@ -48,6 +49,14 @@ pub trait SubtensorCustomApi<BlockHash> {
     fn get_subnets_info(&self, at: Option<BlockHash>) -> RpcResult<Vec<u8>>;
     #[method(name = "subnetInfo_getSubnetHyperparams")]
     fn get_subnet_hyperparams(&self, netuid: u16, at: Option<BlockHash>) -> RpcResult<Vec<u8>>;
+
+    #[method(name = "subtensor_epoch")]
+    fn get_epoch_info(
+        &self,
+        netuid: u16,
+        is_incentive: Option<bool>,
+        at: Option<BlockHash>,
+    ) -> RpcResult<EpochResponse<AccountId32>>;
 
     #[method(name = "subnetInfo_getLockCost")]
     fn get_network_lock_cost(&self, at: Option<BlockHash>) -> RpcResult<u64>;
@@ -99,6 +108,7 @@ where
     C::Api: NeuronInfoRuntimeApi<Block>,
     C::Api: SubnetInfoRuntimeApi<Block>,
     C::Api: SubnetRegistrationRuntimeApi<Block>,
+    C::Api: SubtensorRuntimeApi<Block, AccountId32>,
 {
     fn get_delegates(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<Vec<u8>> {
         let api = self.client.runtime_api();
@@ -212,6 +222,19 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         api.get_subnets_info(at)
+            .map_err(|e| Error::RuntimeError(format!("Unable to get subnets info: {:?}", e)).into())
+    }
+
+    fn get_epoch_info(
+        &self,
+        netuid: u16,
+        is_incentive: Option<bool>,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<EpochResponse<AccountId32>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_epoch_info(at, netuid, is_incentive)
             .map_err(|e| Error::RuntimeError(format!("Unable to get subnets info: {:?}", e)).into())
     }
 
